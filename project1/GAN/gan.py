@@ -40,7 +40,14 @@ class Discriminator(nn.Module):
         ##############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        self.model = None
+        self.model = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(784, 256),
+            nn.LeakyReLU(0.01),
+            nn.Linear(256,256),
+            nn.LeakyReLU(0.01),
+            nn.Linear(256, 1)
+        )
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ##############################################################################
@@ -63,7 +70,14 @@ class Generator(nn.Module):
         ##############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        self.model = None
+        self.model = nn.Sequential(
+            nn.Linear(noise_dim, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 784),
+            nn.Tanh()
+        )
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ##############################################################################
@@ -107,7 +121,10 @@ def discriminator_loss(logits_real: Tensor, logits_fake: Tensor) -> Tensor:
     loss = None
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    target_real = torch.ones_like(logits_real)
+    target_fake = torch.zeros_like(logits_fake)
+    
+    loss = bce_loss(logits_real, target_real) + bce_loss(logits_fake, target_fake)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
@@ -129,7 +146,8 @@ def generator_loss(logits_fake: Tensor) -> Tensor:
     loss = None
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    target = torch.ones_like(logits_fake)
+    loss = bce_loss(logits_fake, target)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
@@ -157,7 +175,7 @@ def ls_discriminator_loss(scores_real: Tensor, scores_fake: Tensor) -> Tensor:
     loss = None
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    loss = (torch.mean((scores_real - 1)**2) + torch.mean(scores_fake**2)) / 2
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
@@ -176,7 +194,7 @@ def ls_generator_loss(scores_fake: Tensor) -> Tensor:
     loss = None
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    loss = torch.mean((scores_fake - 1)**2) / 2
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return loss
@@ -193,7 +211,18 @@ class DCDiscriminator(nn.Module):
         ##############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        self.model = None
+        self.model = nn.Sequential(
+            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=5),
+            nn.LeakyReLU(0.01),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5),
+            nn.LeakyReLU(0.01),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Flatten(),
+            nn.Linear(1024, 1024),
+            nn.LeakyReLU(0.01),
+            nn.Linear(1024, 1)
+        )
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ##############################################################################
@@ -216,7 +245,26 @@ class DCGenerator(nn.Module):
         ##############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        self.model = None
+        self.model = nn.Sequential(
+            nn.Linear(noise_dim, 1024),
+            nn.ReLU(),
+            nn.BatchNorm1d(1024),
+            
+            nn.Linear(1024, 7*7*128),
+            nn.ReLU(),
+            nn.BatchNorm1d(7*7*128),
+            
+            nn.Unflatten(1, (128, 7, 7)),
+            
+            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
+            nn.ReLU(),
+            nn.BatchNorm2d(64),
+            
+            nn.ConvTranspose2d(64, 1, kernel_size=4, stride=2, padding=1),
+            nn.Tanh(),
+            
+            nn.Flatten(),
+        )
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ##############################################################################
@@ -225,6 +273,7 @@ class DCGenerator(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
 
 
 def run_a_gan(
