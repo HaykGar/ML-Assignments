@@ -17,7 +17,7 @@ class BigramConfig:
     vocab_size: int = 50257
     embed_dim: int = 32
     dropout: float = 0.1
-    save_iterations: int = 10000
+    save_iterations: int = 1000
     max_iter: int = 500000
     learning_rate: float = 1e-4
 
@@ -29,7 +29,7 @@ class MiniGPTConfig:
     num_layers: int = 1  # Num of Transformer layers
     vocab_size: int = 50257  # Tiktoken for GPT2 size
     embed_dim: int = (
-        64  # Dimensionality of the the token embeddings (throught the transformer)
+        64  # Dimensionality of the the token embeddings (throughout the transformer)
     )
     feedforward_size: Optional[int] = (
         None  # hidden layer in the feedforward network, None sets it to 4*embed_dim
@@ -47,7 +47,7 @@ class MiniGPTConfig:
     learning_rate: float = 3e-4  # Learning rate for the optimizer
     log_interval: int = 10
     save_path: Path = Path("models/minigpt/")
-    save_iterations: int = 10000
+    save_iterations: int = 1000
     to_log: bool = True
     max_iter: int = 500000
     to_clip_grad: bool = False

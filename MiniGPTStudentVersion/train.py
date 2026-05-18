@@ -45,7 +45,7 @@ def solver(model_name):
     )
 
     # Set the device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else torch.device("mps") if torch.backends.mps.is_available() else "cpu")
 
     # Print number of parameters in the model
     def count_parameters(model):
@@ -82,10 +82,10 @@ def solver(model_name):
 
     ### ========= TODO : START ========= ###
     # Define the loss function
-    loss = None
+    loss = nn.CrossEntropyLoss()
 
     # Define the optimizer
-    optimizer = None
+    optimizer = torch.optim.AdamW(model.parameters(), config.learning_rate)
     ### ======== TODO : END ========= ###
 
     if config.scheduler:
@@ -95,35 +95,60 @@ def solver(model_name):
 
     model.train()
     model.to(device)
+    
+    eval_loss = None
+    train_loss = None # You can use this variable to store the training loss for the current iteration
 
     for i, (context, target) in enumerate(train_dataloader):
 
-        train_loss = None # You can use this variable to store the training loss for the current iteration
         ### ======== TODO : START ========= ###
         # Do the forward pass, compute the loss, do the backward pass, and update the weights with the optimizer.
         
+
+        optimizer.zero_grad()
+        
+        context = context.to(device)
+        target = target.reshape(-1).long().to(device)
+        
+        pred = rearrange(model.forward(context), 'b t v -> (b t) v')
         
         
+        train_loss = loss(pred, target)
+        
+        train_loss.backward()
+        
+        optimizer.step()
+                
         
         ### ======== TODO : END ========= ###
 
         if config.scheduler:
-            scheduler.step()
+            scheduler.step() # type: ignore
 
         del context, target # Clear memory
-
+        
         if i % config.log_interval == 0:
 
             model.eval()
-            eval_loss = None # You can use this variable to store the evaluation loss for the current iteration
+            eval_loss = 0 # You can use this variable to store the evaluation loss for the current iteration
             ### ======== TODO : START ========= ###
             # Compute the evaluation loss on the eval dataset.
             # Hint:
             # - Remember to manually break out of the evaluation loop as the dataloader wraps around the dataset.
             
-            
-            
-            
+            n_evals = 40000 # arbitrary constant
+            with torch.no_grad():
+                for j, (context, target) in enumerate(eval_dataloader):
+                    if j == n_evals:
+                        break
+                    
+                    context = context.to(device)
+                    target = target.reshape(-1).long().to(device)
+                    
+                    pred = rearrange(model.forward(context), 'b t v -> (b t) v')
+                                    
+                    eval_loss += loss(pred, target) / n_evals
+                                    
             ### ======== TODO : END ========= ###
             
             print(

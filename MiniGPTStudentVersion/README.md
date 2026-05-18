@@ -11,7 +11,6 @@ You will write and run generation for both models and compare the results.
 As a bonus you can also attempt to train the transformer model on the dataset. Note that this will be extremely slow on CPU but should be fun if you have access to a GPU.
 
 Happy Coding!
-
 ## Installation
 
 To install the required packages, run the following command:
