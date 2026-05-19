@@ -1,3 +1,12 @@
 .DS_Store
 MiniGPTStudentVersion/__pycache__/
 MiniGPTStudentVersion/wandb/
+
+# Model checkpoints and weights
+*.pth
+*.pt
+*.ckpt
+
+# Datasets and binaries
+*.bin
+*.zip
